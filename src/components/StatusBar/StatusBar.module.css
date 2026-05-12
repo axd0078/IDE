@@ -1,0 +1,26 @@
+.statusBar {
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-height);
+  background: var(--statusbar-bg);
+  color: var(--statusbar-fg);
+  font-size: var(--font-size-sm);
+  padding: 0 10px;
+  user-select: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.spacer {
+  flex: 1;
+}

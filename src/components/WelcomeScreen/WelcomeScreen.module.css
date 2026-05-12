@@ -1,0 +1,55 @@
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.logo {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: var(--font-size);
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--font-size);
+}
+
+.key {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  min-width: 60px;
+  text-align: center;
+}
+
+.desc {
+  color: var(--text-secondary);
+}

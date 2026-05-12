@@ -1,0 +1,79 @@
+.tree {
+  padding: 4px 0;
+}
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  height: var(--tree-item-height);
+  padding-right: 8px;
+  font-size: var(--font-size);
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.treeItem:hover {
+  background: var(--bg-hover);
+}
+
+.treeItemActive {
+  background: var(--bg-active);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+
+.chevronExpanded {
+  transform: rotate(90deg);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+.folderIcon {
+  color: #dcb67a;
+}
+
+.fileIcon {
+  color: var(--text-muted);
+}
+
+.nodeName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.openDot {
+  margin-left: auto;
+  font-size: 8px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.emptyText {
+  padding: 4px 20px;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  user-select: none;
+}

@@ -1,0 +1,11 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editorArea {
+  flex: 1;
+  overflow: hidden;
+}
