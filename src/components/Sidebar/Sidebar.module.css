@@ -71,3 +71,42 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.folderLabel {
+  padding: 4px 12px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 16px;
+}
+
+.emptyText {
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+}
+
+.openBtn {
+  padding: 6px 16px;
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-size: var(--font-size);
+  cursor: pointer;
+}
+
+.openBtn:hover {
+  background: var(--accent-blue-hover);
+}

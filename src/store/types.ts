@@ -1,16 +1,8 @@
-export interface FileNode {
-  id: string;
-  name: string;
-  type: 'file' | 'folder';
-  children?: FileNode[];
-  content?: string;
-  language?: string;
-}
-
 export interface OpenTab {
   id: string;
   name: string;
   isDirty: boolean;
+  savedContent: string;
 }
 
 export interface CursorPosition {
@@ -19,6 +11,7 @@ export interface CursorPosition {
 }
 
 export interface EditorState {
+  folderPath: string | null;
   fileTree: FileNode[];
   expandedFolders: Set<string>;
   openTabs: OpenTab[];
@@ -27,11 +20,14 @@ export interface EditorState {
   cursorPosition: CursorPosition;
   sidebarVisible: boolean;
 
+  openFolder: () => Promise<void>;
   openFile: (fileId: string) => void;
   closeTab: (fileId: string) => void;
   switchTab: (fileId: string) => void;
   updateFileContent: (fileId: string, content: string) => void;
+  saveFile: (fileId: string) => Promise<void>;
   updateCursorPosition: (pos: CursorPosition) => void;
   toggleFolder: (folderId: string) => void;
   toggleSidebar: () => void;
+  reScanFolder: () => Promise<void>;
 }

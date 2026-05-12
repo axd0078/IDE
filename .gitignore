@@ -1,6 +1,8 @@
 node_modules/
 dist/
+out/
 .vite/
 *.local
 .DS_Store
 %USERPROFILE%.npm-cache/
+release/

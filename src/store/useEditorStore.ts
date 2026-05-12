@@ -1,27 +1,65 @@
 import { create } from 'zustand';
 import { EditorState, FileNode } from './types';
-import { sampleFiles } from '../data/sampleFiles';
-import { findNodeById, flattenFiles } from '../utils/fileSystem';
 
-function buildInitialContents(files: FileNode[]): Record<string, string> {
-  const contents: Record<string, string> = {};
-  for (const file of flattenFiles(files)) {
-    contents[file.id] = file.content ?? '';
+const api = () => window.electronAPI;
+
+function findNodeById(tree: FileNode[], id: string): FileNode | null {
+  for (const node of tree) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findNodeById(node.children, id);
+      if (found) return found;
+    }
   }
-  return contents;
+  return null;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
-  fileTree: sampleFiles,
-  expandedFolders: new Set<string>(['src']),
+  folderPath: null,
+  fileTree: [],
+  expandedFolders: new Set<string>(),
   openTabs: [],
   activeTabId: null,
-  fileContents: buildInitialContents(sampleFiles),
+  fileContents: {},
   cursorPosition: { line: 1, column: 1 },
   sidebarVisible: true,
 
+  openFolder: async () => {
+    const result = await api()?.openFolder();
+    if (!result) return;
+
+    const { folderPath, tree } = result;
+
+    // Auto-expand first level
+    const firstLevel = new Set<string>();
+    for (const node of tree) {
+      if (node.type === 'folder') firstLevel.add(node.id);
+    }
+
+    set({
+      folderPath,
+      fileTree: tree,
+      expandedFolders: firstLevel,
+      openTabs: [],
+      activeTabId: null,
+      fileContents: {},
+    });
+
+    api()?.watchFolder(folderPath);
+
+    api()?.onFileChanged(async () => {
+      const { folderPath: fp } = get();
+      if (fp) {
+        const scan = await api()?.scanFolder(fp);
+        if (scan?.success && scan.tree) {
+          set({ fileTree: scan.tree });
+        }
+      }
+    });
+  },
+
   openFile: (fileId: string) => {
-    const { openTabs, fileTree } = get();
+    const { openTabs, fileTree, fileContents } = get();
     const alreadyOpen = openTabs.find(t => t.id === fileId);
     if (alreadyOpen) {
       set({ activeTabId: fileId });
@@ -29,10 +67,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
     const node = findNodeById(fileTree, fileId);
     if (!node || node.type !== 'file') return;
+
     set({
-      openTabs: [...openTabs, { id: fileId, name: node.name, isDirty: false }],
+      openTabs: [...openTabs, { id: fileId, name: node.name, isDirty: false, savedContent: '' }],
       activeTabId: fileId,
     });
+
+    // Load content asynchronously if not cached
+    if (!fileContents[fileId]) {
+      api()?.readFile(fileId).then(result => {
+        if (result.success && result.content !== undefined) {
+          set(s => ({
+            fileContents: { ...s.fileContents, [fileId]: result.content! },
+            openTabs: s.openTabs.map(t =>
+              t.id === fileId
+                ? { ...t, savedContent: result.content! }
+                : t
+            ),
+          }));
+        }
+      });
+    }
   },
 
   closeTab: (fileId: string) => {
@@ -59,9 +114,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set(s => ({
       fileContents: { ...s.fileContents, [fileId]: content },
       openTabs: s.openTabs.map(t =>
-        t.id === fileId ? { ...t, isDirty: true } : t
+        t.id === fileId
+          ? { ...t, isDirty: content !== t.savedContent }
+          : t
       ),
     }));
+  },
+
+  saveFile: async (fileId: string) => {
+    const { fileContents } = get();
+    const content = fileContents[fileId];
+    if (content === undefined) return;
+
+    const result = await api()?.writeFile(fileId, content);
+    if (result?.success) {
+      set(s => ({
+        openTabs: s.openTabs.map(t =>
+          t.id === fileId
+            ? { ...t, isDirty: false, savedContent: content }
+            : t
+        ),
+      }));
+    }
   },
 
   updateCursorPosition: (pos) => set({ cursorPosition: pos }),
@@ -79,4 +153,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   toggleSidebar: () => set(s => ({ sidebarVisible: !s.sidebarVisible })),
+
+  reScanFolder: async () => {
+    const { folderPath } = get();
+    if (!folderPath) return;
+    const scan = await api()?.scanFolder(folderPath);
+    if (scan?.success && scan.tree) {
+      set({ fileTree: scan.tree });
+    }
+  },
 }));

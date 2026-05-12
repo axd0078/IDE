@@ -1,1 +1,29 @@
 /// <reference types="vite/client" />
+
+interface FileNode {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  children?: FileNode[];
+  language?: string;
+}
+
+interface ElectronAPI {
+  openFolder: () => Promise<{ folderPath: string; tree: FileNode[] } | null>;
+  readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+  writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+  scanFolder: (folderPath: string) => Promise<{ success: boolean; tree?: FileNode[]; error?: string }>;
+  watchFolder: (folderPath: string) => Promise<void>;
+  stopWatch: () => Promise<void>;
+  onFileChanged: (callback: () => void) => () => void;
+  onMenuOpenFolder: (callback: () => void) => () => void;
+  onMenuSave: (callback: () => void) => () => void;
+}
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
+
+export {};

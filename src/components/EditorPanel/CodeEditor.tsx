@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { keymap } from '@codemirror/view';
 import { EditorView } from '@codemirror/view';
 import { useEditorStore } from '../../store/useEditorStore';
 import styles from './CodeEditor.module.css';
@@ -14,6 +15,11 @@ interface CodeEditorProps {
 export function CodeEditor({ fileId, content }: CodeEditorProps) {
   const updateFileContent = useEditorStore(s => s.updateFileContent);
   const updateCursorPosition = useEditorStore(s => s.updateCursorPosition);
+  const saveFile = useEditorStore(s => s.saveFile);
+  const activeTabId = useEditorStore(s => s.activeTabId);
+  const openTabs = useEditorStore(s => s.openTabs);
+
+  const tab = openTabs.find(t => t.id === fileId);
 
   const handleChange = useCallback(
     (value: string) => {
@@ -34,6 +40,26 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
     [updateCursorPosition]
   );
 
+  // Listen for menu save event
+  useEffect(() => {
+    const unsub = window.electronAPI?.onMenuSave(() => {
+      if (activeTabId) saveFile(activeTabId);
+    });
+    return () => { unsub?.(); };
+  }, [activeTabId, saveFile]);
+
+  // Ctrl+S keymap
+  const saveKeymap = keymap.of([
+    {
+      key: 'Ctrl-s',
+      run: () => {
+        saveFile(fileId);
+        return true;
+      },
+      preventDefault: true,
+    },
+  ]);
+
   return (
     <div className={styles.editor}>
       <CodeMirror
@@ -41,7 +67,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
         value={content}
         height="100%"
         theme={vscodeDark}
-        extensions={[cpp(), EditorView.lineWrapping]}
+        extensions={[cpp(), EditorView.lineWrapping, saveKeymap]}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{
