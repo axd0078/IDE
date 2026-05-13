@@ -30,4 +30,6 @@ export interface EditorState {
   toggleFolder: (folderId: string) => void;
   toggleSidebar: () => void;
   reScanFolder: () => Promise<void>;
+  restoreLastWorkspace: () => Promise<void>;
+  saveAllDirtyFiles: () => Promise<void>;
 }

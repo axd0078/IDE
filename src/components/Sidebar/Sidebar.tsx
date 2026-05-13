@@ -12,15 +12,8 @@ export function Sidebar() {
 
   return (
     <div className={styles.sidebar}>
-      <div className={styles.activityBar}>
-        <div className={`${styles.activityIcon} ${styles.activityIconActive}`} title="资源管理器">
-          📁
-        </div>
-      </div>
       <div className={styles.explorer}>
-        <div className={styles.explorerHeader}>
-          <span>资源管理器</span>
-        </div>
+        <div className={styles.explorerHeader}>资源管理器</div>
         <div className={styles.explorerContent}>
           {folderPath ? (
             <>

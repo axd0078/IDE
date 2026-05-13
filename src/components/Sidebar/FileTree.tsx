@@ -1,5 +1,4 @@
 import { useEditorStore } from '../../store/useEditorStore';
-import { FileNode } from '../../store/types';
 import styles from './FileTree.module.css';
 
 interface FileTreeProps {
@@ -29,10 +28,7 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
                 onClick={() => toggleFolder(node.id)}
               >
                 <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
-                  ▶
-                </span>
-                <span className={`${styles.icon} ${styles.folderIcon}`}>
-                  {isExpanded ? '📂' : '📁'}
+                  &gt;
                 </span>
                 <span className={styles.nodeName}>{node.name}</span>
               </div>
@@ -42,7 +38,7 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
               {isExpanded && !hasChildren && (
                 <div
                   className={styles.emptyText}
-                  style={{ paddingLeft: `${(depth + 1) * 16 + 36}px` }}
+                  style={{ paddingLeft: `${(depth + 1) * 16 + 24}px` }}
                 >
                   空文件夹
                 </div>
@@ -59,12 +55,11 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
             key={node.id}
             role="treeitem"
             className={`${styles.treeItem} ${isActive ? styles.treeItemActive : ''}`}
-            style={{ paddingLeft: `${depth * 16 + 36}px` }}
+            style={{ paddingLeft: `${depth * 16 + 24}px` }}
             onClick={() => openFile(node.id)}
           >
-            <span className={`${styles.icon} ${styles.fileIcon}`}>📄</span>
             <span className={styles.nodeName}>{node.name}</span>
-            {isOpen && <span className={styles.openDot}>●</span>}
+            {isOpen && <span className={styles.openDot}>&bull;</span>}
           </div>
         );
       })}

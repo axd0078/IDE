@@ -40,25 +40,6 @@
   transform: rotate(90deg);
 }
 
-.icon {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-right: 4px;
-  font-size: 12px;
-}
-
-.folderIcon {
-  color: #dcb67a;
-}
-
-.fileIcon {
-  color: var(--text-muted);
-}
-
 .nodeName {
   overflow: hidden;
   text-overflow: ellipsis;

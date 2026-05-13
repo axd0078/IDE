@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EditorState, FileNode } from './types';
+import { EditorState } from './types';
 
 const api = () => window.electronAPI;
 
@@ -161,5 +161,49 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (scan?.success && scan.tree) {
       set({ fileTree: scan.tree });
     }
+  },
+
+  restoreLastWorkspace: async () => {
+    const result = await api()?.getLastWorkspace();
+    if (!result) return;
+
+    const { folderPath, tree } = result;
+    const firstLevel = new Set<string>();
+    for (const node of tree) {
+      if (node.type === 'folder') firstLevel.add(node.id);
+    }
+
+    set({
+      folderPath,
+      fileTree: tree,
+      expandedFolders: firstLevel,
+    });
+
+    api()?.watchFolder(folderPath);
+
+    api()?.onFileChanged(async () => {
+      const { folderPath: fp } = get();
+      if (fp) {
+        const scan = await api()?.scanFolder(fp);
+        if (scan?.success && scan.tree) {
+          set({ fileTree: scan.tree });
+        }
+      }
+    });
+  },
+
+  saveAllDirtyFiles: async () => {
+    const { openTabs, fileContents } = get();
+    for (const tab of openTabs) {
+      if (tab.isDirty) {
+        const content = fileContents[tab.id];
+        if (content !== undefined) {
+          await api()?.writeFile(tab.id, content);
+        }
+      }
+    }
+    set(s => ({
+      openTabs: s.openTabs.map(t => ({ ...t, isDirty: false, savedContent: s.fileContents[t.id] ?? t.savedContent })),
+    }));
   },
 }));

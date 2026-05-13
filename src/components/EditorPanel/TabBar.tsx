@@ -26,7 +26,7 @@ export function TabBar() {
               closeTab(tab.id);
             }}
           >
-            ✕
+            x
           </span>
         </div>
       ))}

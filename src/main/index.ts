@@ -1,9 +1,32 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { join } from 'node:path';
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { watch } from 'chokidar';
 
 let mainWindow: BrowserWindow | null = null;
+let isQuitting = false;
+let hasDirtyTabs = false;
+
+const workspaceFile = join(app.getPath('userData'), 'workspace.json');
+
+function saveWorkspace(folderPath: string): void {
+  try {
+    const dir = app.getPath('userData');
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(workspaceFile, JSON.stringify({ folderPath }), 'utf-8');
+  } catch { /* 静默忽略 */ }
+}
+
+function loadWorkspace(): string | null {
+  try {
+    if (!existsSync(workspaceFile)) return null;
+    const data = JSON.parse(readFileSync(workspaceFile, 'utf-8'));
+    if (data.folderPath && existsSync(data.folderPath)) return data.folderPath;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -18,6 +41,17 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  // 禁用开发者工具快捷键
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (input.key === 'F12') return _event.preventDefault();
+    if ((input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i') {
+      return _event.preventDefault();
+    }
+    if ((input.control || input.meta) && input.shift && input.key === 'I') {
+      return _event.preventDefault();
+    }
   });
 
   const menu = Menu.buildFromTemplate([
@@ -49,15 +83,35 @@ function createWindow(): void {
         { role: 'paste', label: '粘贴' },
       ],
     },
-    {
-      label: '视图',
-      submenu: [
-        { role: 'toggleDevTools', label: '开发者工具' },
-        { role: 'reload', label: '重新加载' },
-      ],
-    },
   ]);
   Menu.setApplicationMenu(menu);
+
+  // 关闭前确认未保存修改
+  mainWindow.on('close', (e) => {
+    if (isQuitting) return;
+    if (hasDirtyTabs) {
+      e.preventDefault();
+      dialog.showMessageBox(mainWindow!, {
+        type: 'warning',
+        title: 'C IDE',
+        message: '有未保存的修改',
+        detail: '你有未保存的修改，是否要在关闭前保存？',
+        buttons: ['保存并退出', '不保存退出', '取消'],
+        defaultId: 0,
+        cancelId: 2,
+      }).then(({ response }) => {
+        if (response === 0) {
+          // 保存并退出
+          mainWindow?.webContents.send('save-all-and-close');
+        } else if (response === 1) {
+          // 不保存退出
+          isQuitting = true;
+          mainWindow?.close();
+        }
+        // 取消：什么都不做
+      });
+    }
+  });
 
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
@@ -91,9 +145,7 @@ function scanDirectory(dirPath: string): FileNode[] {
 
   for (const entry of entries) {
     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
-
     const fullPath = join(dirPath, entry.name);
-
     if (entry.isDirectory()) {
       nodes.push({
         id: fullPath,
@@ -119,7 +171,9 @@ function scanDirectory(dirPath: string): FileNode[] {
   return nodes;
 }
 
-// IPC handlers
+// ===== IPC handlers =====
+
+// 打开文件夹
 ipcMain.handle('open-folder', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -129,9 +183,23 @@ ipcMain.handle('open-folder', async () => {
 
   const folderPath = result.filePaths[0];
   const tree = scanDirectory(folderPath);
+  saveWorkspace(folderPath);
   return { folderPath, tree };
 });
 
+// 获取上次工作区
+ipcMain.handle('get-last-workspace', async () => {
+  const folderPath = loadWorkspace();
+  if (!folderPath) return null;
+  try {
+    const tree = scanDirectory(folderPath);
+    return { folderPath, tree };
+  } catch {
+    return null;
+  }
+});
+
+// 读取文件
 ipcMain.handle('read-file', async (_event, filePath: string) => {
   try {
     const content = readFileSync(filePath, 'utf-8');
@@ -141,6 +209,7 @@ ipcMain.handle('read-file', async (_event, filePath: string) => {
   }
 });
 
+// 写入文件
 ipcMain.handle('write-file', async (_event, filePath: string, content: string) => {
   try {
     writeFileSync(filePath, content, 'utf-8');
@@ -150,6 +219,7 @@ ipcMain.handle('write-file', async (_event, filePath: string, content: string) =
   }
 });
 
+// 扫描文件夹
 ipcMain.handle('scan-folder', async (_event, folderPath: string) => {
   try {
     const tree = scanDirectory(folderPath);
@@ -157,6 +227,17 @@ ipcMain.handle('scan-folder', async (_event, folderPath: string) => {
   } catch (err: any) {
     return { success: false, error: err.message };
   }
+});
+
+// 同步脏状态
+ipcMain.handle('set-dirty-state', async (_event, dirty: boolean) => {
+  hasDirtyTabs = dirty;
+});
+
+// 关闭窗口（保存完成后调用）
+ipcMain.handle('confirm-quit', async () => {
+  isQuitting = true;
+  mainWindow?.close();
 });
 
 let fileWatcher: ReturnType<typeof watch> | null = null;

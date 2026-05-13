@@ -8,11 +8,6 @@
   user-select: none;
 }
 
-.logo {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
 .title {
   font-size: 24px;
   color: var(--text-primary);

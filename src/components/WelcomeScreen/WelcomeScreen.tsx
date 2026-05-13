@@ -7,7 +7,6 @@ export function WelcomeScreen() {
 
   return (
     <div className={styles.welcome}>
-      <div className={styles.logo}>💻</div>
       <div className={styles.title}>C IDE</div>
       <div className={styles.subtitle}>类C语言编程集成开发环境</div>
 
