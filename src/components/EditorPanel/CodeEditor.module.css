@@ -11,4 +11,10 @@
   overflow: auto;
   font-family: var(--font-mono);
   font-size: 14px;
+  height: 100%;
+}
+
+.editor :global(.cm-content) {
+  font-family: var(--font-mono);
+  font-size: 14px;
 }

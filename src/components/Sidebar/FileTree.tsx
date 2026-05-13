@@ -23,7 +23,7 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
           return (
             <div key={node.id} role="treeitem" aria-expanded={isExpanded}>
               <div
-                className={styles.treeItem}
+                className={`${styles.treeItem} ${styles.folderItem}`}
                 style={{ paddingLeft: `${depth * 16 + 8}px` }}
                 onClick={() => toggleFolder(node.id)}
               >

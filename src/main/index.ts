@@ -1,7 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { join } from 'node:path';
-import { readFileSync, readdirSync, statSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { watch } from 'chokidar';
+import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, watch } from 'node:fs';
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -41,15 +40,17 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
     },
+    show: false,
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.show();
   });
 
   // 禁用开发者工具快捷键
   mainWindow.webContents.on('before-input-event', (_event, input) => {
     if (input.key === 'F12') return _event.preventDefault();
     if ((input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i') {
-      return _event.preventDefault();
-    }
-    if ((input.control || input.meta) && input.shift && input.key === 'I') {
       return _event.preventDefault();
     }
   });
@@ -101,14 +102,11 @@ function createWindow(): void {
         cancelId: 2,
       }).then(({ response }) => {
         if (response === 0) {
-          // 保存并退出
           mainWindow?.webContents.send('save-all-and-close');
         } else if (response === 1) {
-          // 不保存退出
           isQuitting = true;
           mainWindow?.close();
         }
-        // 取消：什么都不做
       });
     }
   });
@@ -173,7 +171,6 @@ function scanDirectory(dirPath: string): FileNode[] {
 
 // ===== IPC handlers =====
 
-// 打开文件夹
 ipcMain.handle('open-folder', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -187,7 +184,6 @@ ipcMain.handle('open-folder', async () => {
   return { folderPath, tree };
 });
 
-// 获取上次工作区
 ipcMain.handle('get-last-workspace', async () => {
   const folderPath = loadWorkspace();
   if (!folderPath) return null;
@@ -199,7 +195,6 @@ ipcMain.handle('get-last-workspace', async () => {
   }
 });
 
-// 读取文件
 ipcMain.handle('read-file', async (_event, filePath: string) => {
   try {
     const content = readFileSync(filePath, 'utf-8');
@@ -209,7 +204,6 @@ ipcMain.handle('read-file', async (_event, filePath: string) => {
   }
 });
 
-// 写入文件
 ipcMain.handle('write-file', async (_event, filePath: string, content: string) => {
   try {
     writeFileSync(filePath, content, 'utf-8');
@@ -219,7 +213,6 @@ ipcMain.handle('write-file', async (_event, filePath: string, content: string) =
   }
 });
 
-// 扫描文件夹
 ipcMain.handle('scan-folder', async (_event, folderPath: string) => {
   try {
     const tree = scanDirectory(folderPath);
@@ -229,36 +222,28 @@ ipcMain.handle('scan-folder', async (_event, folderPath: string) => {
   }
 });
 
-// 同步脏状态
 ipcMain.handle('set-dirty-state', async (_event, dirty: boolean) => {
   hasDirtyTabs = dirty;
 });
 
-// 关闭窗口（保存完成后调用）
 ipcMain.handle('confirm-quit', async () => {
   isQuitting = true;
   mainWindow?.close();
 });
 
+// 使用 Node 内置 fs.watch 代替 chokidar，减少启动开销
 let fileWatcher: ReturnType<typeof watch> | null = null;
 
 ipcMain.handle('watch-folder', async (_event, folderPath: string) => {
-  if (fileWatcher) {
-    await fileWatcher.close();
-  }
-  fileWatcher = watch(folderPath, {
-    ignored: /(^|[/\\])\./,
-    ignoreInitial: true,
-    depth: 10,
-  });
-  fileWatcher.on('all', () => {
+  if (fileWatcher) fileWatcher.close();
+  fileWatcher = watch(folderPath, { recursive: true }, (_eventType, _filename) => {
     mainWindow?.webContents.send('file-changed');
   });
 });
 
 ipcMain.handle('stop-watch', async () => {
   if (fileWatcher) {
-    await fileWatcher.close();
+    fileWatcher.close();
     fileWatcher = null;
   }
 });

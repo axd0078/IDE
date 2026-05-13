@@ -12,16 +12,20 @@ export function Sidebar() {
 
   return (
     <div className={styles.sidebar}>
+      <div className={styles.activityBar}>
+        <div className={`${styles.activityIcon} ${styles.activityIconActive}`} title="资源管理器">
+          <span className={styles.activityLabel}>资源管理器</span>
+        </div>
+      </div>
       <div className={styles.explorer}>
-        <div className={styles.explorerHeader}>资源管理器</div>
+        <div className={styles.explorerHeader}>
+          {folderPath
+            ? (folderPath.split(/[/\\]/).pop() || folderPath)
+            : '未打开文件夹'}
+        </div>
         <div className={styles.explorerContent}>
           {folderPath ? (
-            <>
-              <div className={styles.folderLabel}>
-                {folderPath.split(/[/\\]/).pop() || folderPath}
-              </div>
-              <FileTree nodes={fileTree} depth={0} />
-            </>
+            <FileTree nodes={fileTree} depth={0} />
           ) : (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>尚未打开文件夹</p>

@@ -16,6 +16,10 @@
   text-overflow: ellipsis;
 }
 
+.folderItem {
+  font-weight: 600;
+}
+
 .treeItem:hover {
   background: var(--bg-hover);
 }
