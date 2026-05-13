@@ -23,13 +23,14 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
           return (
             <div key={node.id} role="treeitem" aria-expanded={isExpanded}>
               <div
-                className={`${styles.treeItem} ${styles.folderItem}`}
+                className={styles.treeItem}
                 style={{ paddingLeft: `${depth * 16 + 8}px` }}
                 onClick={() => toggleFolder(node.id)}
               >
                 <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
                   &gt;
                 </span>
+                <span className={styles.icon}>{isExpanded ? '📂' : '📁'}</span>
                 <span className={styles.nodeName}>{node.name}</span>
               </div>
               {isExpanded && hasChildren && (
@@ -38,7 +39,7 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
               {isExpanded && !hasChildren && (
                 <div
                   className={styles.emptyText}
-                  style={{ paddingLeft: `${(depth + 1) * 16 + 24}px` }}
+                  style={{ paddingLeft: `${(depth + 1) * 16 + 44}px` }}
                 >
                   空文件夹
                 </div>
@@ -58,6 +59,7 @@ export function FileTree({ nodes, depth }: FileTreeProps) {
             style={{ paddingLeft: `${depth * 16 + 24}px` }}
             onClick={() => openFile(node.id)}
           >
+            <span className={styles.icon}>📄</span>
             <span className={styles.nodeName}>{node.name}</span>
             {isOpen && <span className={styles.openDot}>&bull;</span>}
           </div>

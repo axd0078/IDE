@@ -44,6 +44,16 @@
   transform: rotate(90deg);
 }
 
+.icon {
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  margin-right: 3px;
+}
+
 .nodeName {
   overflow: hidden;
   text-overflow: ellipsis;

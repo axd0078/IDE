@@ -11,17 +11,6 @@ interface CodeEditorProps {
   content: string;
 }
 
-// 强制 CodeMirror 内部填满父容器并启用滚动
-const fixScroller = EditorView.theme({
-  '&': {
-    height: '100%',
-  },
-  '.cm-scroller': {
-    overflow: 'auto',
-    height: '100%',
-  },
-});
-
 export function CodeEditor({ fileId, content }: CodeEditorProps) {
   const updateFileContent = useEditorStore(s => s.updateFileContent);
   const updateCursorPosition = useEditorStore(s => s.updateCursorPosition);
@@ -29,9 +18,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
   const activeTabId = useEditorStore(s => s.activeTabId);
 
   const handleChange = useCallback(
-    (value: string) => {
-      updateFileContent(fileId, value);
-    },
+    (value: string) => { updateFileContent(fileId, value); },
     [fileId, updateFileContent]
   );
 
@@ -39,10 +26,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
     (viewUpdate: any) => {
       const pos = viewUpdate.state.selection.main.head;
       const line = viewUpdate.state.doc.lineAt(pos);
-      updateCursorPosition({
-        line: line.number,
-        column: pos - line.from + 1,
-      });
+      updateCursorPosition({ line: line.number, column: pos - line.from + 1 });
     },
     [updateCursorPosition]
   );
@@ -54,16 +38,11 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
     return () => { unsub?.(); };
   }, [activeTabId, saveFile]);
 
-  const saveKeymap = keymap.of([
-    {
-      key: 'Ctrl-s',
-      run: () => {
-        saveFile(fileId);
-        return true;
-      },
-      preventDefault: true,
-    },
-  ]);
+  const saveKeymap = keymap.of([{
+    key: 'Ctrl-s',
+    run: () => { saveFile(fileId); return true; },
+    preventDefault: true,
+  }]);
 
   return (
     <div className={styles.editor}>
@@ -72,7 +51,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
         value={content}
         height="100%"
         theme={vscodeDark}
-        extensions={[cpp(), EditorView.lineWrapping, saveKeymap, fixScroller]}
+        extensions={[cpp(), EditorView.lineWrapping, saveKeymap]}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{

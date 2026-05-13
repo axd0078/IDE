@@ -1,5 +1,9 @@
 .editor {
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
 }
 
@@ -8,10 +12,9 @@
 }
 
 .editor :global(.cm-scroller) {
-  overflow: auto;
+  overflow: auto !important;
   font-family: var(--font-mono);
   font-size: 14px;
-  height: 100%;
 }
 
 .editor :global(.cm-content) {
