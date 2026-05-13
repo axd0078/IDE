@@ -5,9 +5,15 @@ import { resolve } from 'node:path';
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    build: {
+      minify: false,  // dev 阶段跳过压缩，减少构建时间
+    },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    build: {
+      minify: false,
+    },
   },
   renderer: {
     root: '.',
@@ -17,5 +23,10 @@ export default defineConfig({
       },
     },
     plugins: [react()],
+    server: {
+      warmup: {
+        clientFiles: ['./src/main.tsx'],  // 启动时预编译入口
+      },
+    },
   },
 });
