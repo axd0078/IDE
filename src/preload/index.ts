@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFolder: () => ipcRenderer.invoke('open-folder'),
   getLastWorkspace: () => ipcRenderer.invoke('get-last-workspace'),
   readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
+  readFileWithEncoding: (filePath: string, encoding: string) =>
+    ipcRenderer.invoke('read-file-with-encoding', filePath, encoding),
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke('write-file', filePath, content),
   scanFolder: (folderPath: string) => ipcRenderer.invoke('scan-folder', folderPath),

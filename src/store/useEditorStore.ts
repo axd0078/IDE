@@ -21,6 +21,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   openTabs: [],
   activeTabId: null,
   fileContents: {},
+  fileEncodings: {},
   cursorPosition: { line: 1, column: 1 },
   sidebarVisible: true,
 
@@ -79,6 +80,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         if (result.success && result.content !== undefined) {
           set(s => ({
             fileContents: { ...s.fileContents, [fileId]: result.content! },
+            fileEncodings: { ...s.fileEncodings, [fileId]: result.encoding || 'UTF-8' },
             openTabs: s.openTabs.map(t =>
               t.id === fileId
                 ? { ...t, savedContent: result.content! }
@@ -205,5 +207,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set(s => ({
       openTabs: s.openTabs.map(t => ({ ...t, isDirty: false, savedContent: s.fileContents[t.id] ?? t.savedContent })),
     }));
+  },
+
+  reopenWithEncoding: async (fileId: string, encoding: string) => {
+    const result = await api()?.readFileWithEncoding(fileId, encoding);
+    if (result?.success && result.content !== undefined) {
+      set(s => ({
+        fileContents: { ...s.fileContents, [fileId]: result.content! },
+        fileEncodings: { ...s.fileEncodings, [fileId]: encoding },
+        openTabs: s.openTabs.map(t =>
+          t.id === fileId
+            ? { ...t, savedContent: result.content!, isDirty: false }
+            : t
+        ),
+      }));
+    }
   },
 }));

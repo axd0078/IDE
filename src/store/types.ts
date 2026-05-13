@@ -17,6 +17,7 @@ export interface EditorState {
   openTabs: OpenTab[];
   activeTabId: string | null;
   fileContents: Record<string, string>;
+  fileEncodings: Record<string, string>;
   cursorPosition: CursorPosition;
   sidebarVisible: boolean;
 
@@ -32,4 +33,5 @@ export interface EditorState {
   reScanFolder: () => Promise<void>;
   restoreLastWorkspace: () => Promise<void>;
   saveAllDirtyFiles: () => Promise<void>;
+  reopenWithEncoding: (fileId: string, encoding: string) => Promise<void>;
 }

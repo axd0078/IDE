@@ -237,6 +237,32 @@ ipcMain.handle('read-file', async (_event, filePath: string) => {
   }
 });
 
+ipcMain.handle('read-file-with-encoding', async (_event, filePath: string, encoding: string) => {
+  try {
+    const buffer = readFileSync(filePath);
+    let text: string;
+    switch (encoding) {
+      case 'UTF-16 LE':
+        text = iconv.decode(buffer, 'utf16-le');
+        break;
+      case 'UTF-16 BE':
+        text = iconv.decode(buffer, 'utf16-be');
+        break;
+      case 'GBK':
+        text = iconv.decode(buffer, 'gbk');
+        break;
+      case 'ISO-8859-1':
+        text = buffer.toString('latin1');
+        break;
+      default:
+        text = buffer.toString('utf-8');
+    }
+    return { success: true, content: text, encoding };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+});
+
 ipcMain.handle('write-file', async (_event, filePath: string, content: string) => {
   try {
     writeFileSync(filePath, content, 'utf-8');

@@ -21,6 +21,10 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .spacer {
   flex: 1;
 }
