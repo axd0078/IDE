@@ -6,3 +6,4 @@ out/
 .DS_Store
 %USERPROFILE%.npm-cache/
 release/
+.claude/
