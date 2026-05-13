@@ -25,6 +25,7 @@
   justify-content: center;
   cursor: default;
   position: relative;
+  font-size: 20px;
 }
 
 .activityIconActive::before {
@@ -35,14 +36,6 @@
   bottom: 10px;
   width: 2px;
   background: var(--text-primary);
-}
-
-.activityLabel {
-  writing-mode: vertical-rl;
-  font-size: 10px;
-  color: var(--text-primary);
-  letter-spacing: 1px;
-  user-select: none;
 }
 
 .explorer {

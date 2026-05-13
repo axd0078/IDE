@@ -7,12 +7,17 @@
   overflow: hidden;
 }
 
+/* @uiw/react-codemirror 外层 wrapper */
+.editor > div {
+  height: 100%;
+  overflow: hidden;
+}
+
 .editor :global(.cm-editor) {
   height: 100%;
 }
 
 .editor :global(.cm-scroller) {
-  overflow: auto !important;
   font-family: var(--font-mono);
   font-size: 14px;
 }

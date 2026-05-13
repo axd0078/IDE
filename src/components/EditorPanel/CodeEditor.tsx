@@ -6,6 +6,19 @@ import { keymap, EditorView } from '@codemirror/view';
 import { useEditorStore } from '../../store/useEditorStore';
 import styles from './CodeEditor.module.css';
 
+// 强制 CodeMirror 内部 flex 高度链路，确保滚动容器撑满并滚动
+const forceScroller = EditorView.theme({
+  '&': {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  '.cm-scroller': {
+    flex: '1 1 0',
+    overflow: 'auto',
+  },
+});
+
 interface CodeEditorProps {
   fileId: string;
   content: string;
@@ -51,7 +64,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
         value={content}
         height="100%"
         theme={vscodeDark}
-        extensions={[cpp(), EditorView.lineWrapping, saveKeymap]}
+        extensions={[cpp(), EditorView.lineWrapping, saveKeymap, forceScroller]}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{

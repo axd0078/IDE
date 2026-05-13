@@ -14,7 +14,7 @@ export function Sidebar() {
     <div className={styles.sidebar}>
       <div className={styles.activityBar}>
         <div className={`${styles.activityIcon} ${styles.activityIconActive}`} title="资源管理器">
-          <span className={styles.activityLabel}>资源管理器</span>
+          📁
         </div>
       </div>
       <div className={styles.explorer}>
