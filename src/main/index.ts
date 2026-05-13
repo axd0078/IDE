@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { join } from 'node:path';
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, watch } from 'node:fs';
+import * as iconv from 'iconv-lite';
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -169,6 +170,37 @@ function scanDirectory(dirPath: string): FileNode[] {
   return nodes;
 }
 
+// 编码检测：BOM → UTF-8 试探 → GBK 回退 → Latin-1 兜底
+function detectAndDecode(buffer: Buffer): { text: string; encoding: string } {
+  // UTF-8 BOM
+  if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
+    return { text: buffer.subarray(3).toString('utf-8'), encoding: 'UTF-8 BOM' };
+  }
+  // UTF-16 LE BOM
+  if (buffer[0] === 0xFF && buffer[1] === 0xFE) {
+    return { text: buffer.subarray(2).toString('utf16le'), encoding: 'UTF-16 LE' };
+  }
+  // UTF-16 BE BOM
+  if (buffer[0] === 0xFE && buffer[1] === 0xFF) {
+    return { text: iconv.decode(buffer.subarray(2), 'utf16-be'), encoding: 'UTF-16 BE' };
+  }
+
+  // 尝试 UTF-8（无 BOM），失败则用 GBK
+  const utf8 = buffer.toString('utf-8');
+  if (!utf8.includes('�')) {
+    return { text: utf8, encoding: 'UTF-8' };
+  }
+
+  // GBK / GB2312 / GB18030（中文 Windows 常见）
+  try {
+    const gbk = iconv.decode(buffer, 'gbk');
+    return { text: gbk, encoding: 'GBK' };
+  } catch { /* fall through */ }
+
+  // 最后兜底：Latin-1（逐字节映射，永不失败）
+  return { text: buffer.toString('latin1'), encoding: 'ISO-8859-1' };
+}
+
 // ===== IPC handlers =====
 
 ipcMain.handle('open-folder', async () => {
@@ -197,8 +229,9 @@ ipcMain.handle('get-last-workspace', async () => {
 
 ipcMain.handle('read-file', async (_event, filePath: string) => {
   try {
-    const content = readFileSync(filePath, 'utf-8');
-    return { success: true, content };
+    const buffer = readFileSync(filePath);
+    const { text, encoding } = detectAndDecode(buffer);
+    return { success: true, content: text, encoding };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

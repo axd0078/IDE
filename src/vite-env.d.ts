@@ -12,7 +12,7 @@ declare global {
   interface ElectronAPI {
     openFolder: () => Promise<{ folderPath: string; tree: FileNode[] } | null>;
     getLastWorkspace: () => Promise<{ folderPath: string; tree: FileNode[] } | null>;
-    readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+    readFile: (filePath: string) => Promise<{ success: boolean; content?: string; encoding?: string; error?: string }>;
     writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
     scanFolder: (folderPath: string) => Promise<{ success: boolean; tree?: FileNode[]; error?: string }>;
     watchFolder: (folderPath: string) => Promise<void>;

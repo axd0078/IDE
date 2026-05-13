@@ -1,23 +1,49 @@
 import { useCallback, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
-import { cpp } from '@codemirror/lang-cpp';
-import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { keymap, EditorView } from '@codemirror/view';
 import { useEditorStore } from '../../store/useEditorStore';
 import styles from './CodeEditor.module.css';
 
-// 强制 CodeMirror 内部 flex 高度链路，确保滚动容器撑满并滚动
-const forceScroller = EditorView.theme({
+// 纯文本暗色主题（不做语法高亮，预留后续自定义语法分析接入）
+const plainDark = EditorView.theme({
   '&': {
+    backgroundColor: '#1e1e1e',
+    color: '#d4d4d4',
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
+  '.cm-gutters': {
+    backgroundColor: '#1e1e1e',
+    color: '#858585',
+    border: 'none',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: '#2a2d2e',
+  },
+  '.cm-activeLine': {
+    backgroundColor: '#2a2d2e',
+  },
+  '.cm-cursor': {
+    borderLeftColor: '#d4d4d4',
+  },
+  '.cm-selectionBackground': {
+    backgroundColor: '#264f78',
+  },
+  '.cm-selectionMatch': {
+    backgroundColor: '#264f78',
+  },
+  '.cm-matchingBracket': {
+    backgroundColor: '#3a3a3a',
+    outline: '1px solid #888',
+  },
   '.cm-scroller': {
     flex: '1 1 0',
     overflow: 'auto',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '14px',
   },
-});
+}, { dark: true });
 
 interface CodeEditorProps {
   fileId: string;
@@ -63,8 +89,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
         key={fileId}
         value={content}
         height="100%"
-        theme={vscodeDark}
-        extensions={[cpp(), EditorView.lineWrapping, saveKeymap, forceScroller]}
+        extensions={[plainDark, EditorView.lineWrapping, saveKeymap]}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{
