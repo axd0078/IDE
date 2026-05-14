@@ -398,7 +398,7 @@ ipcMain.handle('link-and-run', async (_event, filePath: string) => {
   try {
     const exeDir = filePath.substring(0, filePath.replace(/\\/g, '/').lastIndexOf('/'));
     // 先 cd 到 exe 所在目录，然后运行，结束后暂停
-    const runCmd = `start "C IDE 运行" cmd /k "cd /d "${exeDir}" && "${exePath}" && echo. && echo 程序已结束，按任意键关闭... && pause > nul"`;
+    const runCmd = `start "C IDE 运行" cmd /c "cd /d "${exeDir}" && "${exePath}" && echo. && echo 程序已结束，按任意键关闭... && pause > nul"`;
     exec(runCmd);
     return { success: true, message: `已启动 ${exePath}` };
   } catch (err: any) {
