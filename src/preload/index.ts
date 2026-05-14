@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFileWithEncoding: (filePath: string, encoding: string) =>
     ipcRenderer.invoke('read-file-with-encoding', filePath, encoding),
   scanCode: (code: string) => ipcRenderer.invoke('scan-code', code),
+  compileFile: (filePath: string) => ipcRenderer.invoke('compile-file', filePath),
+  linkAndRun: (filePath: string) => ipcRenderer.invoke('link-and-run', filePath),
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke('write-file', filePath, content),
   scanFolder: (folderPath: string) => ipcRenderer.invoke('scan-folder', folderPath),
@@ -29,5 +31,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSaveAllAndClose: (callback: () => void) => {
     ipcRenderer.on('save-all-and-close', callback);
     return () => ipcRenderer.removeListener('save-all-and-close', callback);
+  },
+  onMenuCompile: (callback: () => void) => {
+    ipcRenderer.on('menu-compile', callback);
+    return () => ipcRenderer.removeListener('menu-compile', callback);
+  },
+  onMenuLinkRun: (callback: () => void) => {
+    ipcRenderer.on('menu-link-run', callback);
+    return () => ipcRenderer.removeListener('menu-link-run', callback);
   },
 });

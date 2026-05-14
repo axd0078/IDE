@@ -30,6 +30,8 @@ declare global {
     readFile: (filePath: string) => Promise<{ success: boolean; content?: string; encoding?: string; error?: string }>;
     readFileWithEncoding: (filePath: string, encoding: string) => Promise<{ success: boolean; content?: string; encoding?: string; error?: string }>;
     scanCode: (code: string) => Promise<{ tokens: TokenInfo[]; errors: ScannerError[] }>;
+    compileFile: (filePath: string) => Promise<{ success: boolean; message: string }>;
+    linkAndRun: (filePath: string) => Promise<{ success: boolean; message: string }>;
     writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
     scanFolder: (folderPath: string) => Promise<{ success: boolean; tree?: FileNode[]; error?: string }>;
     watchFolder: (folderPath: string) => Promise<void>;
@@ -40,6 +42,8 @@ declare global {
     onMenuOpenFolder: (callback: () => void) => () => void;
     onMenuSave: (callback: () => void) => () => void;
     onSaveAllAndClose: (callback: () => void) => () => void;
+    onMenuCompile: (callback: () => void) => () => void;
+    onMenuLinkRun: (callback: () => void) => () => void;
   }
 
   interface Window {

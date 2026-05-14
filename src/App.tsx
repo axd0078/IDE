@@ -5,15 +5,15 @@ import { useEditorStore } from './store/useEditorStore';
 export default function App() {
   const openFolder = useEditorStore(s => s.openFolder);
   const restoreLastWorkspace = useEditorStore(s => s.restoreLastWorkspace);
+  const saveFile = useEditorStore(s => s.saveFile);
   const saveAllDirtyFiles = useEditorStore(s => s.saveAllDirtyFiles);
+  const activeTabId = useEditorStore(s => s.activeTabId);
   const confirmQuit = () => window.electronAPI?.confirmQuit();
 
-  // 启动时恢复上次工作区
   useEffect(() => {
     restoreLastWorkspace();
   }, [restoreLastWorkspace]);
 
-  // 监听菜单"打开文件夹"
   useEffect(() => {
     const unsub = window.electronAPI?.onMenuOpenFolder(() => {
       openFolder();
@@ -21,7 +21,6 @@ export default function App() {
     return () => { unsub?.(); };
   }, [openFolder]);
 
-  // 监听"保存全部并退出"
   useEffect(() => {
     const unsub = window.electronAPI?.onSaveAllAndClose(async () => {
       await saveAllDirtyFiles();
@@ -30,7 +29,30 @@ export default function App() {
     return () => { unsub?.(); };
   }, [saveAllDirtyFiles]);
 
-  // 同步脏状态到主进程
+  // 编译生成 .s
+  useEffect(() => {
+    const unsub = window.electronAPI?.onMenuCompile(async () => {
+      const fileId = useEditorStore.getState().activeTabId;
+      if (!fileId) return;
+      await saveFile(fileId);
+      const result = await window.electronAPI?.compileFile(fileId);
+      alert(result?.success ? result.message : (result?.message || '编译失败'));
+    });
+    return () => { unsub?.(); };
+  }, [saveFile]);
+
+  // 链接并运行
+  useEffect(() => {
+    const unsub = window.electronAPI?.onMenuLinkRun(async () => {
+      const fileId = useEditorStore.getState().activeTabId;
+      if (!fileId) return;
+      await saveFile(fileId);
+      const result = await window.electronAPI?.linkAndRun(fileId);
+      alert(result?.success ? result.message : (result?.message || '运行失败'));
+    });
+    return () => { unsub?.(); };
+  }, [saveFile]);
+
   useEffect(() => {
     const unsub = useEditorStore.subscribe((state) => {
       const dirty = state.openTabs.some(tab => tab.isDirty);

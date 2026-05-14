@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { join } from 'node:path';
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, watch } from 'node:fs';
-import { spawn, ChildProcess } from 'node:child_process';
+import { spawn, exec, ChildProcess } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import * as iconv from 'iconv-lite';
 
@@ -85,6 +85,21 @@ function createWindow(): void {
         { role: 'cut', label: '剪切' },
         { role: 'copy', label: '复制' },
         { role: 'paste', label: '粘贴' },
+      ],
+    },
+    {
+      label: '运行',
+      submenu: [
+        {
+          label: '编译生成 .s',
+          accelerator: 'F7',
+          click: () => mainWindow?.webContents.send('menu-compile'),
+        },
+        {
+          label: '链接并运行',
+          accelerator: 'F5',
+          click: () => mainWindow?.webContents.send('menu-link-run'),
+        },
       ],
     },
   ]);
@@ -332,6 +347,60 @@ ipcMain.handle('scan-code', async (_event, code: string) => {
     });
   } catch (err: any) {
     return { tokens: [], errors: [{ line: 1, code: String(err.message) }] };
+  }
+});
+
+// ===== 编译 & 链接运行 =====
+
+function runCmd(command: string, cwd?: string): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    exec(command, { cwd }, (err, stdout, stderr) => {
+      resolve({ stdout: stdout || '', stderr: stderr || (err?.message ?? '') });
+    });
+  });
+}
+
+ipcMain.handle('compile-file', async (_event, filePath: string) => {
+  const compilerPy = join(compilerDir, 'mycompiler.py');
+  const outPath = filePath.replace(/\.[^.]+$/, '.s');
+  try {
+    const cmd = `python "${compilerPy}" "${filePath}" -S -o "${outPath}"`;
+    const { stderr } = await runCmd(cmd, compilerDir);
+    if (stderr) {
+      return { success: false, message: stderr.trim() };
+    }
+    return { success: true, message: `已生成 ${outPath}` };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+});
+
+ipcMain.handle('link-and-run', async (_event, filePath: string) => {
+  const compilerPy = join(compilerDir, 'mycompiler.py');
+  const asmPath = filePath.replace(/\.[^.]+$/, '.s');
+  const exePath = filePath.replace(/\.[^.]+$/, '.exe');
+
+  // 1. 编译到 .s
+  const compileCmd = `python "${compilerPy}" "${filePath}" -S -o "${asmPath}"`;
+  const compileResult = await runCmd(compileCmd, compilerDir);
+  if (compileResult.stderr) {
+    return { success: false, message: '编译失败:\n' + compileResult.stderr.trim() };
+  }
+
+  // 2. gcc 链接
+  const linkCmd = `gcc "${asmPath}" -o "${exePath}"`;
+  const linkResult = await runCmd(linkCmd);
+  if (linkResult.stderr && !existsSync(exePath)) {
+    return { success: false, message: '链接失败:\n' + linkResult.stderr.trim() };
+  }
+
+  // 3. 运行
+  try {
+    const runDir = filePath.substring(0, filePath.replace(/\\/g, '/').lastIndexOf('/'));
+    exec(`start "" "${exePath}"`, { cwd: runDir || undefined });
+    return { success: true, message: `已启动 ${exePath}` };
+  } catch (err: any) {
+    return { success: false, message: '运行失败: ' + err.message };
   }
 });
 
