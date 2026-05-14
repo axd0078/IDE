@@ -7,3 +7,5 @@ out/
 %USERPROFILE%.npm-cache/
 release/
 .claude/
+__pycache__/
+*.pyc

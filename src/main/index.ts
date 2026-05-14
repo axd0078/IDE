@@ -1,6 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { join } from 'node:path';
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, watch } from 'node:fs';
+import { spawn, ChildProcess } from 'node:child_process';
+import { createInterface } from 'node:readline';
 import * as iconv from 'iconv-lite';
 
 let mainWindow: BrowserWindow | null = null;
@@ -290,6 +292,49 @@ ipcMain.handle('confirm-quit', async () => {
   mainWindow?.close();
 });
 
+// ===== Python 词法扫描器 bridge =====
+let pyProcess: ChildProcess | null = null;
+let pyPending: ((value: any) => void) | null = null;
+const compilerDir = join(app.getAppPath(), 'compiler');
+
+function getPythonBridge(): ChildProcess {
+  if (!pyProcess || pyProcess.killed) {
+    pyProcess = spawn('python', [join(compilerDir, 'scanner_bridge.py')], {
+      cwd: compilerDir,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const rl = createInterface({ input: pyProcess.stdout! });
+    rl.on('line', (line: string) => {
+      if (pyPending) {
+        const resolve = pyPending;
+        pyPending = null;
+        try {
+          resolve(JSON.parse(line));
+        } catch {
+          resolve({ tokens: [], errors: [] });
+        }
+      }
+    });
+    pyProcess.stderr?.on('data', (data) => {
+      console.error('Python scanner:', data.toString());
+    });
+    pyProcess.on('exit', () => { pyProcess = null; pyPending = null; });
+  }
+  return pyProcess;
+}
+
+ipcMain.handle('scan-code', async (_event, code: string) => {
+  try {
+    const bridge = getPythonBridge();
+    return new Promise((resolve) => {
+      pyPending = resolve;
+      bridge.stdin!.write(JSON.stringify({ code }) + '\n');
+    });
+  } catch (err: any) {
+    return { tokens: [], errors: [{ line: 1, code: String(err.message) }] };
+  }
+});
+
 // 使用 Node 内置 fs.watch 代替 chokidar，减少启动开销
 let fileWatcher: ReturnType<typeof watch> | null = null;
 
@@ -311,5 +356,9 @@ app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (fileWatcher) fileWatcher.close();
+  if (pyProcess && !pyProcess.killed) {
+    pyProcess.stdin!.write(JSON.stringify({ action: 'exit' }) + '\n');
+    pyProcess.kill();
+  }
   app.quit();
 });

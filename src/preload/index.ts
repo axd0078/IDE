@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
   readFileWithEncoding: (filePath: string, encoding: string) =>
     ipcRenderer.invoke('read-file-with-encoding', filePath, encoding),
+  scanCode: (code: string) => ipcRenderer.invoke('scan-code', code),
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke('write-file', filePath, content),
   scanFolder: (folderPath: string) => ipcRenderer.invoke('scan-folder', folderPath),

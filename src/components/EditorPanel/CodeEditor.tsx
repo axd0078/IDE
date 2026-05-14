@@ -2,9 +2,10 @@ import { useCallback, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { keymap, EditorView } from '@codemirror/view';
 import { useEditorStore } from '../../store/useEditorStore';
+import { cHighlight } from '../../language/cHighlight';
 import styles from './CodeEditor.module.css';
 
-// 纯文本暗色主题（不做语法高亮，预留后续自定义语法分析接入）
+// 纯文本暗色主题（由 Python 扫描器提供高亮，这里只配基础编辑器外观）
 const plainDark = EditorView.theme({
   '&': {
     backgroundColor: '#1e1e1e',
@@ -89,7 +90,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
         key={fileId}
         value={content}
         height="100%"
-        extensions={[plainDark, EditorView.lineWrapping, saveKeymap]}
+        extensions={[plainDark, cHighlight(), EditorView.lineWrapping, saveKeymap]}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{
