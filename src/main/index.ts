@@ -394,10 +394,12 @@ ipcMain.handle('link-and-run', async (_event, filePath: string) => {
     return { success: false, message: '链接失败:\n' + linkResult.stderr.trim() };
   }
 
-  // 3. 运行
+  // 3. 用 cmd /k 运行，窗口保留
   try {
-    const runDir = filePath.substring(0, filePath.replace(/\\/g, '/').lastIndexOf('/'));
-    exec(`start "" "${exePath}"`, { cwd: runDir || undefined });
+    const exeDir = filePath.substring(0, filePath.replace(/\\/g, '/').lastIndexOf('/'));
+    // 先 cd 到 exe 所在目录，然后运行，结束后暂停
+    const runCmd = `start "C IDE 运行" cmd /k "cd /d "${exeDir}" && "${exePath}" && echo. && echo 程序已结束，按任意键关闭... && pause > nul"`;
+    exec(runCmd);
     return { success: true, message: `已启动 ${exePath}` };
   } catch (err: any) {
     return { success: false, message: '运行失败: ' + err.message };
