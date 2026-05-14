@@ -56,6 +56,7 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
   const updateCursorPosition = useEditorStore(s => s.updateCursorPosition);
   const saveFile = useEditorStore(s => s.saveFile);
   const activeTabId = useEditorStore(s => s.activeTabId);
+  const langMode = useEditorStore(s => s.fileLanguageModes[fileId] || 'text');
 
   const handleChange = useCallback(
     (value: string) => { updateFileContent(fileId, value); },
@@ -84,13 +85,21 @@ export function CodeEditor({ fileId, content }: CodeEditorProps) {
     preventDefault: true,
   }]);
 
+  const isC = langMode === 'c';
+  const extensions = [
+    plainDark,
+    EditorView.lineWrapping,
+    saveKeymap,
+    ...(isC ? [cHighlight()] : []),
+  ];
+
   return (
     <div className={styles.editor}>
       <CodeMirror
-        key={fileId}
+        key={`${fileId}-${langMode}`}
         value={content}
         height="100%"
-        extensions={[plainDark, cHighlight(), EditorView.lineWrapping, saveKeymap]}
+        extensions={extensions}
         onChange={handleChange}
         onUpdate={handleUpdate}
         basicSetup={{

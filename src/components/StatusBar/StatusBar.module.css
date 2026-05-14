@@ -25,6 +25,11 @@
   cursor: pointer;
 }
 
+.activeMode {
+  color: #ffd700;
+  font-weight: 600;
+}
+
 .spacer {
   flex: 1;
 }

@@ -22,6 +22,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   activeTabId: null,
   fileContents: {},
   fileEncodings: {},
+  fileLanguageModes: {},
   cursorPosition: { line: 1, column: 1 },
   sidebarVisible: true,
 
@@ -222,5 +223,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ),
       }));
     }
+  },
+
+  toggleCLanguage: (fileId: string) => {
+    set(s => ({
+      fileLanguageModes: {
+        ...s.fileLanguageModes,
+        [fileId]: s.fileLanguageModes[fileId] === 'c' ? 'text' : 'c',
+      },
+    }));
   },
 }));

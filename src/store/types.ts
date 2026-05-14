@@ -18,6 +18,7 @@ export interface EditorState {
   activeTabId: string | null;
   fileContents: Record<string, string>;
   fileEncodings: Record<string, string>;
+  fileLanguageModes: Record<string, 'c' | 'text'>;
   cursorPosition: CursorPosition;
   sidebarVisible: boolean;
 
@@ -34,4 +35,5 @@ export interface EditorState {
   restoreLastWorkspace: () => Promise<void>;
   saveAllDirtyFiles: () => Promise<void>;
   reopenWithEncoding: (fileId: string, encoding: string) => Promise<void>;
+  toggleCLanguage: (fileId: string) => void;
 }
