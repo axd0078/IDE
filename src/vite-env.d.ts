@@ -18,8 +18,10 @@ declare global {
   }
 
   interface ScannerError {
+    from: number;
+    to: number;
     line: number;
-    code: string;
+    message: string;
   }
 
   interface ElectronAPI {
